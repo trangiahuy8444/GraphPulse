@@ -1,6 +1,7 @@
 import os
 import pickle
 import time
+from pathlib import Path
 from keras.callbacks import Callback
 import numpy as np
 import tensorflow as tf
@@ -14,6 +15,11 @@ from util import file_util
 """
     Implement the RNN (Recurrent Neural Network) methods tailored including F_mapper(TDA5), F_snapshot(Raw) and GraphPulse data. 
 """
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+# Default location of pre-extracted sequences in this repository:
+#   <repo>/data/Sequences/<network>/{seq_tda.txt, seq_raw.txt}
+_DEFAULT_SEQ_DIR = Path(os.environ.get("GRAPHPULSE_SEQ_DIR", _REPO_ROOT / "data" / "Sequences"))
 
 class AUCCallback(Callback):
     def __init__(self, validation_data):
@@ -34,13 +40,12 @@ class AUCCallback(Callback):
         return np.average(self.auc_scores)
 
 def read_seq_data(network):
-    file_path = "Sequence/{}/".format(network)
-    file = "seq.txt"
-    seqData = dict()
-    with open(file_path + file, 'rb') as f:
-        # print("\n Reading Torch Data {} / {}".format(inx, len(files)))
-        seqData = pickle.load(f)
-    return seqData
+    """
+    Convenience wrapper: load the default TDA sequence file for a network.
+
+    This repository stores sequences under: <repo>/data/Sequences/<network>/.
+    """
+    return read_seq_data_by_file_name(network, "seq_tda.txt")
 
 def read_seq_data_by_file_name(network, file):
 
@@ -55,13 +60,17 @@ def read_seq_data_by_file_name(network, file):
         dict: A dictionary containing the loaded sequence data.
     """
 
-    import os
-
-    file_path = "C:/Users/kiara/Desktop/MyProject/GraphPulse/data/Sequences/{}/".format(network)
-    seqData = dict()
-    with open(file_path + file, 'rb') as f:
-        seqData = pickle.load(f)
-    return seqData
+    seq_dir = Path(_DEFAULT_SEQ_DIR) / network
+    target = seq_dir / file
+    if not target.exists():
+        raise FileNotFoundError(
+            f"Sequence file not found: {target}\n"
+            f"- Expected layout: <repo>/data/Sequences/<network>/{file}\n"
+            f"- You can override the base dir via env var GRAPHPULSE_SEQ_DIR\n"
+            f"- Current GRAPHPULSE_SEQ_DIR: {_DEFAULT_SEQ_DIR}"
+        )
+    with target.open("rb") as f:
+        return pickle.load(f)
 
 def train_test_split_sequential(*arrays, train_size=None):
     if train_size is None:
@@ -79,7 +88,7 @@ def reset_random_seeds():
     tf.random.set_seed(1)
     np.random.seed(1)
 
-def LSTM_classifier(data, labels, spec, network):
+def LSTM_classifier(data, labels, spec, network, seed: int = 42, epochs: int = 100):
     """
       Train and evaluate an LSTM-based neural network classifier.
 
@@ -94,10 +103,9 @@ def LSTM_classifier(data, labels, spec, network):
       """
 
     reset_random_seeds()
-    # Set random seed for NumPy
-    np.random.seed(42)
-    # Set random seed for TensorFlow
-    tf.random.set_seed(42)
+    # Set random seed for NumPy / TensorFlow
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
     start_Rnn_training_time = time.time()
     # data_train, data_test, labels_train, labels_test = train_test_split(data, labels, test_size=0.2, random_state=42)
     data_train, data_test = train_test_split_sequential(data, train_size=0.8)
@@ -149,7 +157,7 @@ def LSTM_classifier(data, labels, spec, network):
     # Train the model
     # Create the AUCCallback and specify the validation data
     auc_callback = AUCCallback(validation_data=(data_test, labels_test))
-    model_LSTM.fit(data_train, labels_train, epochs=100, validation_data=(data_test, labels_test),
+    model_LSTM.fit(data_train, labels_train, epochs=epochs, validation_data=(data_test, labels_test),
                    callbacks=[auc_callback])  # Adjust the epochs and batch_size as needed
 
     # Make predictions on the test set
@@ -166,6 +174,7 @@ def LSTM_classifier(data, labels, spec, network):
     print(f"AVG AUC : {auc_callback.get_auc_avg()}")
 
     try:
+        os.makedirs("RnnResults", exist_ok=True)
         # Attempt to open the file in 'append' mode
         with open("RnnResults/RNN-Results.txt", 'a') as file:
             # Append a line to the existing file
@@ -176,6 +185,7 @@ def LSTM_classifier(data, labels, spec, network):
                                                           len(data), learning_rate) + '\n')
     except FileNotFoundError:
         # File doesn't exist, so create a new file and write text
+        os.makedirs("RnnResults", exist_ok=True)
         with open("RnnResults/RNN-Results.txt", 'w') as file:
             file.write(
                 "Network={} Spec={} Loss={} Accuracy={} AUC={} time={} data={}".format(network, spec, loss, accuracy,
