@@ -133,7 +133,11 @@ class Runner(object):
                 if epoch > min_epoch and patience > max_patience:
                     print('early stopping')
                     break
-            gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+            # Mac M2 compatibility: MPS doesn't support max_memory_allocated, use conditional check
+            if torch.cuda.is_available():
+                gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000
+            else:
+                gpu_mem_alloc = 0  # MPS doesn't support memory tracking yet
             if epoch % args.log_interval == 0:
                 logger.info('==' * 27)
                 logger.info("Epoch:{}, Loss: {:.3f}, Time: {:.2f}, GPU: {:.1f}MiB".format(epoch, average_epoch_loss,

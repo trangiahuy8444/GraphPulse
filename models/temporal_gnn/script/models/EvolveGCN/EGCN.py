@@ -93,9 +93,10 @@ class mat_GRU_cell(torch.nn.Module):
 
 
 def pad_with_last_val(vect, k):
-    device = 'cuda' if vect.is_cuda else 'cpu'
+    # Mac M2 compatibility: Use device property which works for CUDA, MPS, and CPU
+    device = vect.device
     if vect.size(0) == 0:
-        return torch.arange(k)
+        return torch.arange(k, device=device)
     pad = torch.ones(k - vect.size(0),
                      dtype=torch.long,
                      device=device) * vect[-1]
@@ -139,15 +140,17 @@ class TopK(torch.nn.Module):
     def forward(self, node_embs, mask=None):
         scores = node_embs.matmul(self.scorer) / self.scorer.norm()
         if mask is None:
-            mask = torch.zeros_like(scores) if torch.cuda.is_available() else torch.zeros_like(scores)
+            # Mac M2 compatibility: Create zeros mask on same device as scores
+            mask = torch.zeros_like(scores)
         scores = scores + mask
         vals, topk_indices = scores.view(-1).topk(self.k)
         topk_indices = topk_indices[vals > -float("Inf")]
         if topk_indices.size(0) < self.k:
             topk_indices = pad_with_last_val(topk_indices, self.k)
         tanh = torch.nn.Tanh()
+        # Mac M2 compatibility: Check for sparse tensor types (works for CPU, CUDA, and MPS)
         if isinstance(node_embs, torch.sparse.FloatTensor) or \
-                isinstance(node_embs, torch.cuda.sparse.FloatTensor):
+                (hasattr(torch, 'cuda') and torch.cuda.is_available() and isinstance(node_embs, torch.cuda.sparse.FloatTensor)):
             node_embs = node_embs.to_dense()
 
         out = node_embs[topk_indices] * tanh(scores[topk_indices].view(-1, 1))

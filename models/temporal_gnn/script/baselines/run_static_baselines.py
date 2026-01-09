@@ -47,7 +47,11 @@ class Runner(object):
         train_edge_index = torch.cat(train_edges_list, dim=1).to(args.device)
         train_pos_edge_index = torch.cat(train_pos_edges_list, dim=1).to(args.device)
         train_neg_edge_index = torch.cat(train_neg_edges_list, dim=1).to(args.device)
-        gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+        # Mac M2 compatibility: MPS doesn't support max_memory_allocated, use conditional check
+        if torch.cuda.is_available():
+            gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000
+        else:
+            gpu_mem_alloc = 0  # MPS doesn't support memory tracking yet
         best_results = [0] * 3
         if args.trainable_feat:
             self.x = None

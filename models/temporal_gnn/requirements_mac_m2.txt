@@ -1,0 +1,38 @@
+# Mac M2 (Apple Silicon) Compatible Requirements for Temporal GNN
+# Install with: pip install -r requirements_mac_m2.txt
+
+# PyTorch with MPS support (requires PyTorch 2.0+ for stable MPS)
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# PyTorch Geometric and extensions
+# Note: These may need to be installed separately if wheels are not available
+torch-geometric>=2.3.0
+# For extensions, try:
+# pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.0.0+cpu.html
+
+# Core dependencies
+numpy>=1.20.2,<1.25.0  # Compatible with PyTorch 2.0
+scipy>=1.6.1
+pandas>=2.0.0
+networkx>=2.5,<3.0
+scikit-learn>=0.24.1
+matplotlib>=3.3.4
+
+# Hyperbolic geometry (may require manual compilation)
+geoopt>=0.3.1
+
+# Network analysis
+networkit>=7.0
+
+# Configuration
+PyYAML>=6.0
+tqdm>=4.66.0
+
+# Training framework
+pytorch-lightning>=2.0.0
+
+# Note: sklearn is deprecated - scikit-learn is already listed above
+# Note: For RNN models (TensorFlow/Keras), install separately:
+# pip install tensorflow-macos tensorflow-metal

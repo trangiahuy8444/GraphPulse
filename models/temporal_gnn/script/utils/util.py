@@ -46,10 +46,12 @@ def set_random(random_seed):
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
-    torch.cuda.manual_seed(random_seed)
-    torch.cuda.manual_seed_all(random_seed)
-    # torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
+    # Mac M2 compatibility: Only set CUDA seeds if CUDA is available
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(random_seed)
+        torch.cuda.manual_seed_all(random_seed)
+        torch.backends.cudnn.deterministic = True
+    # MPS (Apple Silicon) doesn't have separate seed functions, using manual_seed is sufficient
     print('INFO: fixed random seed')
 
 

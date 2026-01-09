@@ -6,6 +6,9 @@ numpy==1.20.2
 scikit-learn==0.24.1
 scipy==1.6.1
 sklearn==0.0
+# NOTE: For Mac M2 (Apple Silicon), use: torch>=2.0.0 (MPS support)
+# For CUDA systems, install: torch==1.6.0+cu101 or compatible CUDA version
+# The codebase has been patched to support both CUDA and MPS automatically
 torch==1.6.0+cu101
 torch-cluster==1.5.9
 torch-geometric==1.6.3

@@ -53,9 +53,14 @@ parser.add_argument('--aggregation', type=str, default='deg', help='aggregation 
 args = parser.parse_args()
 
 # set the running device
+# Mac M2 (Apple Silicon) compatibility: Support MPS with fallback to CPU
 if int(args.device_id) >= 0 and torch.cuda.is_available():
-    args.device = torch.device("cuda".format(args.device_id))
+    args.device = torch.device(f"cuda:{args.device_id}")
     print('INFO: using gpu:{} to train the model'.format(args.device_id))
+elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+    # MPS (Metal Performance Shaders) for Apple Silicon - requires PyTorch 1.12+
+    args.device = torch.device("mps")
+    print('INFO: using MPS (Apple Silicon GPU) to train the model')
 else:
     args.device = torch.device("cpu")
     print('INFO: using cpu to train the model')
