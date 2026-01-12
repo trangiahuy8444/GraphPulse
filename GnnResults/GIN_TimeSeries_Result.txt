@@ -1,0 +1,21 @@
+
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.4844	Train AUC Score	0.4131	Test Accuracy:0.4583	Test AUC Score	0.3741	unseen AUC Score	0.3735	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.4861	Train AUC Score	0.4337	Test Accuracy:0.4306	Test AUC Score	0.3826	unseen AUC Score	0.3824	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.4549	Train AUC Score	0.6227	Test Accuracy:0.3958	Test AUC Score	0.6784	unseen AUC Score	0.6800	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.5052	Train AUC Score	0.4159	Test Accuracy:0.4583	Test AUC Score	0.4341	unseen AUC Score	0.4337	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.5938	Train AUC Score	0.4455	Test Accuracy:0.6389	Test AUC Score	0.4046	unseen AUC Score	0.4048	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.5069	Train AUC Score	0.5769	Test Accuracy:0.5625	Test AUC Score	0.5696	unseen AUC Score	0.5710	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.5087	Train AUC Score	0.4018	Test Accuracy:0.5625	Test AUC Score	0.3129	unseen AUC Score	0.3131	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.5625	Train AUC Score	0.5980	Test Accuracy:0.6736	Test AUC Score	0.6845	unseen AUC Score	0.6833	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.5625	Train AUC Score	0.6132	Test Accuracy:0.6667	Test AUC Score	0.7101	unseen AUC Score	0.7101	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.4878	Train AUC Score	0.4254	Test Accuracy:0.4653	Test AUC Score	0.3749	unseen AUC Score	0.3747	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.5434	Train AUC Score	0.4102	Test Accuracy:0.5625	Test AUC Score	0.3716	unseen AUC Score	0.3721	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.4965	Train AUC Score	0.5614	Test Accuracy:0.5486	Test AUC Score	0.6361	unseen AUC Score	0.6363	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.4913	Train AUC Score	0.4314	Test Accuracy:0.4444	Test AUC Score	0.3826	unseen AUC Score	0.3818	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.4878	Train AUC Score	0.4277	Test Accuracy:0.4514	Test AUC Score	0.4304	unseen AUC Score	0.4300	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.4774	Train AUC Score	0.4159	Test Accuracy:0.4444	Test AUC Score	0.4247	unseen AUC Score	0.4266	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.5069	Train AUC Score	0.4033	Test Accuracy:0.4653	Test AUC Score	0.3224	unseen AUC Score	0.3224	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.4826	Train AUC Score	0.4034	Test Accuracy:0.4583	Test AUC Score	0.4508	unseen AUC Score	0.4508	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.4844	Train AUC Score	0.3819	Test Accuracy:0.4306	Test AUC Score	0.3346	unseen AUC Score	0.3354	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	0	Train Accuracy	0.5052	Train AUC Score	0.5740	Test Accuracy:0.4861	Test AUC Score	0.6070	unseen AUC Score	0.6056	Number of Zero labels	378	Number of one labels	342
+Network	networkdgd.txt	Duplicate	0	Epoch	100	Train Accuracy	0.4809	Train AUC Score	0.4082	Test Accuracy:0.4583	Test AUC Score	0.3802	unseen AUC Score	0.3830	Number of Zero labels	378	Number of one labels	342
