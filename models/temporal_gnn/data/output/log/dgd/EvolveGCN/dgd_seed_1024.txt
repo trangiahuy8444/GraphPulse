@@ -1,0 +1,49 @@
+[2026-01-10 16:07:53,846 INFO] INFO: using trainable feature, feature dim: 128
+[2026-01-10 16:16:31,058 INFO] INFO: using trainable feature, feature dim: 128
+[2026-01-10 16:16:31,066 INFO] using model EvolveGCN 
+[2026-01-10 16:16:31,067 INFO] not using hyper decoder
+[2026-01-10 16:16:31,067 INFO] INFO: total length: 737, test length: 144
+[2026-01-10 16:21:04,984 INFO] INFO: using trainable feature, feature dim: 128
+[2026-01-10 16:21:04,993 INFO] using model EvolveGCN 
+[2026-01-10 16:21:04,994 INFO] not using hyper decoder
+[2026-01-10 16:21:04,994 INFO] INFO: total length: 737, test length: 144
+[2026-01-10 16:26:26,519 INFO] INFO: using trainable feature, feature dim: 128
+[2026-01-10 16:26:26,528 INFO] using model EvolveGCN 
+[2026-01-10 16:26:26,529 INFO] not using hyper decoder
+[2026-01-10 16:26:26,529 INFO] INFO: total length: 737, test length: 144
+[2026-01-10 16:26:28,828 INFO] ======================================================
+[2026-01-10 16:26:28,828 INFO] INFO: Epoch:1, Loss: 1.2163, Time: 2.191, GPU: 0.0MiB
+[2026-01-10 16:26:28,828 INFO] Epoch:1, Test AUC: 0.5777, AP: 0.6285, New AUC: 0.5568, New AP: 0.6025
+[2026-01-10 16:27:05,411 INFO] ======================================================
+[2026-01-10 16:27:05,412 INFO] INFO: Epoch:20, Loss: 1.0949, Time: 1.839, GPU: 0.0MiB
+[2026-01-10 16:27:05,412 INFO] Epoch:14, Test AUC: 0.6240, AP: 0.6580, New AUC: 0.5965, New AP: 0.6277
+[2026-01-10 16:27:44,594 INFO] Epoch:40 (test_method); Transductive: average AUC: 0.6028; average AP: 0.6476
+[2026-01-10 16:27:44,595 INFO] Epoch:40 (test_method); Inductive: average AUC: 0.5773; average AP: 0.6187
+[2026-01-10 16:27:44,595 INFO] ======================================================
+[2026-01-10 16:27:44,595 INFO] INFO: Epoch:40, Loss: 1.0349, Time: 2.020, GPU: 0.0MiB
+[2026-01-10 16:27:44,595 INFO] Epoch:40, Test AUC: 0.6028, AP: 0.6476, New AUC: 0.5773, New AP: 0.6187
+[2026-01-10 16:28:22,290 INFO] ======================================================
+[2026-01-10 16:28:22,291 INFO] INFO: Epoch:60, Loss: 1.0123, Time: 1.789, GPU: 0.0MiB
+[2026-01-10 16:28:22,291 INFO] Epoch:58, Test AUC: 0.5715, AP: 0.6259, New AUC: 0.5492, New AP: 0.6007
+[2026-01-10 16:29:01,787 INFO] ======================================================
+[2026-01-10 16:29:01,788 INFO] INFO: Epoch:80, Loss: 0.9930, Time: 1.972, GPU: 0.0MiB
+[2026-01-10 16:29:01,788 INFO] Epoch:78, Test AUC: 0.5743, AP: 0.6290, New AUC: 0.5502, New AP: 0.6017
+[2026-01-10 16:29:39,518 INFO] ======================================================
+[2026-01-10 16:29:39,518 INFO] INFO: Epoch:100, Loss: 0.9994, Time: 1.797, GPU: 0.0MiB
+[2026-01-10 16:29:39,518 INFO] Epoch:98, Test AUC: 0.5753, AP: 0.6337, New AUC: 0.5518, New AP: 0.6057
+[2026-01-10 16:30:17,859 INFO] ======================================================
+[2026-01-10 16:30:17,860 INFO] INFO: Epoch:120, Loss: 0.9843, Time: 1.807, GPU: 0.0MiB
+[2026-01-10 16:30:17,860 INFO] Epoch:114, Test AUC: 0.5804, AP: 0.6385, New AUC: 0.5555, New AP: 0.6081
+[2026-01-10 16:30:56,768 INFO] ======================================================
+[2026-01-10 16:30:56,769 INFO] INFO: Epoch:140, Loss: 0.9734, Time: 1.791, GPU: 0.0MiB
+[2026-01-10 16:30:56,769 INFO] Epoch:138, Test AUC: 0.5779, AP: 0.6360, New AUC: 0.5533, New AP: 0.6061
+[2026-01-10 16:31:32,606 INFO] ======================================================
+[2026-01-10 16:31:32,607 INFO] INFO: Epoch:160, Loss: 0.9815, Time: 1.786, GPU: 0.0MiB
+[2026-01-10 16:31:32,607 INFO] Epoch:138, Test AUC: 0.5779, AP: 0.6360, New AUC: 0.5533, New AP: 0.6061
+[2026-01-10 16:32:09,881 INFO] ======================================================
+[2026-01-10 16:32:09,882 INFO] INFO: Epoch:180, Loss: 0.9761, Time: 1.935, GPU: 0.0MiB
+[2026-01-10 16:32:09,882 INFO] Epoch:138, Test AUC: 0.5779, AP: 0.6360, New AUC: 0.5533, New AP: 0.6061
+[2026-01-10 16:32:26,564 INFO] >> Total time : 359.93
+[2026-01-10 16:32:26,565 INFO] >> Parameters: lr:0.0100 |Dim:16 |Window:5 |
+[2026-01-10 16:32:26,565 INFO] INFO: Saving the model...
+[2026-01-10 16:32:26,570 INFO] INFO: The model is saved. Done.
