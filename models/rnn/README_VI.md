@@ -52,7 +52,7 @@ File Python chứa toàn bộ implementation của RNN models, bao gồm:
 ### Import Module
 
 ```python
-from models.rnn.rnn_methods import LSTM_classifier, read_seq_data_by_file_name
+from models.rnn.rnn_methods import LSTM_classifier, read_seq_data_by_file_name, reset_random_seeds
 ```
 
 ### Ví dụ Sử Dụng Cơ Bản
@@ -61,24 +61,24 @@ from models.rnn.rnn_methods import LSTM_classifier, read_seq_data_by_file_name
 import numpy as np
 from models.rnn.rnn_methods import LSTM_classifier, read_seq_data_by_file_name
 
-# Đọc sequence data
-network = "networkadex.txt"
+# Đọc sequence data từ processed files
+network = "networkdgd.txt"
 data = read_seq_data_by_file_name(network, "seq_tda.txt")
 data_raw = read_seq_data_by_file_name(network, "seq_raw.txt")
 
-# Prepare data
+# Chuẩn bị dữ liệu cho training
 np_data = np.array(data["sequence"]["Overlap_xx_Ncube_x"])
 np_labels = np.array(data["label"])
 
-# Normalize data
+# Normalization dữ liệu (Min-Max scaling)
 min_val = np.min(np_data)
 max_val = np.max(np_data)
 normalized_data = (np_data - min_val) / (max_val - min_val)
 normalized_data = np.nan_to_num(normalized_data, nan=0)
 
-# Train và evaluate
+# Huấn luyện và đánh giá mô hình
 auc_score = LSTM_classifier(normalized_data, np_labels, "TDA5", network)
-print(f"AUC Score: {auc_score}")
+print(f"ROC-AUC Score: {auc_score:.4f}")
 ```
 
 ### Sử dụng với GraphPulse (Combined Features)
@@ -93,17 +93,26 @@ auc = LSTM_classifier(concatenated, np_labels, "GraphPulse", network)
 
 ### Chạy Full Pipeline (như trong main)
 
-```python
-# Sử dụng code trong __main__ block
-# Chạy file trực tiếp:
+```bash
+# Chạy file trực tiếp để thực hiện full pipeline
+cd models/rnn
 python rnn_methods.py
 ```
 
-Script sẽ tự động:
-- Xử lý tất cả networks trong networkList
-- Chạy 5 runs cho mỗi network
+**Lưu ý Mac M2**: RNN models sử dụng TensorFlow/Keras. Trên Mac M2:
+```bash
+# Đảm bảo đã cài đặt TensorFlow-Metal
+pip install tensorflow-macos tensorflow-metal
+
+# Sau đó chạy training
+python rnn_methods.py
+```
+
+Script sẽ tự động thực hiện:
+- Xử lý tất cả networks trong `networkList`
+- Chạy 5 runs (repetitions) cho mỗi network để tính average metrics
 - Test các approaches: TDA5, Raw, Combined, GraphPulse
-- Lưu results vào file
+- Lưu results vào `RnnResults/RNN-Results.txt`
 
 ## Model Architecture
 
@@ -200,16 +209,22 @@ Network,Spec,Loss,Accuracy,AUC,ROC-AUC,Avg-AUC,Std-AUC,Training-Time,Data-Size,L
 
 ### Dependencies
 
-- **TensorFlow/Keras**: Cho RNN implementation
-- **NumPy**: Data manipulation
-- **scikit-learn**: Metrics (ROC-AUC)
-- **Pickle**: Đọc sequence data
+- **TensorFlow/Keras**: Framework cho RNN implementation (LSTM, GRU)
+- **NumPy**: Data manipulation và numerical operations
+- **scikit-learn**: Metrics evaluation (ROC-AUC calculation)
+- **Pickle**: Đọc sequence data từ processed files
+
+**Mac M2 Specific:**
+- **TensorFlow-Metal**: Apple's optimized TensorFlow cho Mac với Metal acceleration
+- Cài đặt: `pip install tensorflow-macos tensorflow-metal`
+- Models sẽ tự động sử dụng Metal acceleration nếu available
 
 ### Hardware Requirements
 
-- **CPU**: Có thể chạy trên CPU nhưng sẽ chậm
-- **GPU**: Không bắt buộc nhưng sẽ nhanh hơn đáng kể
-- **Memory**: Cần đủ RAM để load sequences (có thể vài GB cho large networks)
+- **CPU**: Có thể chạy trên CPU nhưng sẽ chậm hơn đáng kể
+- **GPU**: Không bắt buộc nhưng sẽ nhanh hơn đáng kể (CUDA hoặc Metal trên Mac)
+- **Memory**: Cần đủ RAM để load sequences vào memory (có thể vài GB cho large networks như dgd)
+- **Mac M2**: TensorFlow-Metal sẽ tận dụng GPU của Apple Silicon để accelerate training
 
 ### Data Paths
 

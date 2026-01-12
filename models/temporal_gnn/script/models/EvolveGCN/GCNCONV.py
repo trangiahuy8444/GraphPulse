@@ -91,6 +91,18 @@ class GCNConv(MessagePassing):
 
     def forward(self, x, edge_index, nn_weight=None, edge_weight=None):
         """"""
+        # Validate edge_index shape for MPS/CPU compatibility
+        if edge_index.dim() != 2:
+            raise ValueError(
+                f"edge_index must be 2D tensor with shape [2, E], "
+                f"got {edge_index.dim()}D tensor with shape {edge_index.shape}"
+            )
+        if edge_index.size(0) != 2:
+            raise ValueError(
+                f"edge_index must have shape [2, E], got shape {edge_index.shape}. "
+                f"Did you mean to transpose it?"
+            )
+        
         if nn_weight is not None:
             x = x.matmul(nn_weight)
         else:

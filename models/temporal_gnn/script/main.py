@@ -112,6 +112,10 @@ class Runner(object):
 
         # saving the trained model
         logger.info("INFO: Saving the model...")
+        # Ensure the directory exists before saving
+        model_dir = os.path.dirname(self.model_path)
+        if model_dir:  # Only create if path contains a directory
+            os.makedirs(model_dir, exist_ok=True)
         torch.save(self.model.state_dict(), self.model_path)
         logger.info("INFO: The model is saved. Done.")
 

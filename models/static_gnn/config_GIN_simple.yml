@@ -1,0 +1,15 @@
+# Simplified config_GIN.yml for GraphPulse paper reproduction
+# Based on Section 6 - Implementation details
+# Hidden units: 64 (4 layers), Learning rate: 0.0001, Optimizer: Adam
+
+hidden_units:
+  - [64, 64, 64, 64]  # 4 layers with 64 units each
+
+dropout:
+  - 0.5  # Standard dropout rate
+
+train_eps:
+  - true  # Learnable epsilon parameter
+
+aggregation:
+  - mean  # Mean pooling for graph-level representation

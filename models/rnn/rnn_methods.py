@@ -1,4 +1,23 @@
 import os
+import sys
+
+# Add project root to system path for imports
+# Script is in models/rnn/, so project root is two levels up
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Verify import path works
+try:
+    from util import file_util
+except ImportError:
+    # Try alternative paths if needed
+    print(f"DEBUG: Project root: {project_root}")
+    print(f"DEBUG: sys.path: {sys.path[:3]}")
+    print(f"DEBUG: Checking if util exists: {os.path.exists(os.path.join(project_root, 'util'))}")
+    raise
+
 import pickle
 import time
 from keras.callbacks import Callback
@@ -9,7 +28,32 @@ from keras.layers import LSTM, Dense, Dropout, GRU
 from sklearn.metrics import roc_auc_score
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import LSTM, Dense
-from util import file_util
+
+# Monkey patch for Mac M2 tensorflow-macos compatibility
+# Fixes: AttributeError: module 'tensorflow.python.distribute.input_lib' has no attribute 'DistributedDatasetInterface'
+try:
+    import tensorflow.python.distribute.input_lib as input_lib
+    
+    if not hasattr(input_lib, 'DistributedDatasetInterface'):
+        class DistributedDatasetInterface(object):
+            pass
+        input_lib.DistributedDatasetInterface = DistributedDatasetInterface
+        print("INFO: Applied Monkey Patch for DistributedDatasetInterface (Mac M2 compatibility)")
+except (ImportError, AttributeError) as e:
+    # If the module structure is different, try alternative patch location
+    try:
+        import tensorflow.python.distribute as dist_module
+        if not hasattr(dist_module, 'input_lib'):
+            # Create a mock input_lib module
+            class DistributedDatasetInterface(object):
+                pass
+            class MockInputLib:
+                DistributedDatasetInterface = DistributedDatasetInterface
+            dist_module.input_lib = MockInputLib()
+            print("INFO: Applied Alternative Monkey Patch for DistributedDatasetInterface")
+    except Exception:
+        print(f"WARNING: Could not apply DistributedDatasetInterface patch. Error: {e}")
+        print("INFO: Training may proceed if this attribute is not required for your use case.")
 
 """
     Implement the RNN (Recurrent Neural Network) methods tailored including F_mapper(TDA5), F_snapshot(Raw) and GraphPulse data. 
@@ -57,9 +101,31 @@ def read_seq_data_by_file_name(network, file):
 
     import os
 
-    file_path = "C:/Users/kiara/Desktop/MyProject/GraphPulse/data/Sequences/{}/".format(network)
+    # Use relative path from project root (works across platforms)
+    # Original hardcoded Windows path: "C:/Users/kiara/Desktop/MyProject/GraphPulse/data/Sequences/{}/"
+    
+    # Try multiple possible paths (from different execution contexts)
+    possible_paths = [
+        "../data/Sequences/{}/".format(network),  # From models/rnn/
+        "../../data/Sequences/{}/".format(network),  # Alternative relative path
+        "data/Sequences/{}/".format(network),  # From project root
+    ]
+    
     seqData = dict()
-    with open(file_path + file, 'rb') as f:
+    full_path = None
+    for file_path in possible_paths:
+        full_path = file_path + file
+        if os.path.exists(full_path):
+            break
+    else:
+        # None of the paths worked
+        raise FileNotFoundError(
+            f"Sequence file not found for network '{network}', file '{file}'. Tried paths:\n  " +
+            "\n  ".join([p + file for p in possible_paths]) +
+            f"\nPlease ensure sequence data exists in data/Sequences/{network}/"
+        )
+    
+    with open(full_path, 'rb') as f:
         seqData = pickle.load(f)
     return seqData
 
@@ -165,9 +231,14 @@ def LSTM_classifier(data, labels, spec, network):
     print(f"STD : {auc_callback.get_auc_std()}")
     print(f"AVG AUC : {auc_callback.get_auc_avg()}")
 
+    # Ensure output directory exists
+    output_dir = "RnnResults"
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "RNN-Results.txt")
+    
     try:
         # Attempt to open the file in 'append' mode
-        with open("RnnResults/RNN-Results.txt", 'a') as file:
+        with open(output_file, 'a') as file:
             # Append a line to the existing file
             file.write(
                 "{},{},{},{},{},{},{},{},{},{},{}".format(network, spec, loss, accuracy, auc, roc_LSTM,
@@ -176,7 +247,7 @@ def LSTM_classifier(data, labels, spec, network):
                                                           len(data), learning_rate) + '\n')
     except FileNotFoundError:
         # File doesn't exist, so create a new file and write text
-        with open("RnnResults/RNN-Results.txt", 'w') as file:
+        with open(output_file, 'w') as file:
             file.write(
                 "Network={} Spec={} Loss={} Accuracy={} AUC={} time={} data={}".format(network, spec, loss, accuracy,
                                                                                        auc,
@@ -186,9 +257,13 @@ def LSTM_classifier(data, labels, spec, network):
 
 
 if __name__ == "__main__":
-    networkList = ["mathoverflow.txt", "networkcoindash.txt", "networkiconomi.txt", "networkadex.txt", "networkdgd.txt",
-                   "networkbancor.txt", "networkcentra.txt", "networkcindicator.txt", "networkaeternity.txt",
-                   "networkaion.txt", "networkaragon.txt", "CollegeMsg.txt", "Reddit_B.tsv"]
+    # Original full dataset list (commented out for dgd-only run):
+    # networkList = ["mathoverflow.txt", "networkcoindash.txt", "networkiconomi.txt", "networkadex.txt", "networkdgd.txt",
+    #                "networkbancor.txt", "networkcentra.txt", "networkcindicator.txt", "networkaeternity.txt",
+    #                "networkaion.txt", "networkaragon.txt", "CollegeMsg.txt", "Reddit_B.tsv"]
+    
+    # Running only 'dgd' dataset to save time
+    networkList = ["networkdgd.txt"]
 
     # can be choose from ["all","per_column","auto"]
     normalizer = "all"

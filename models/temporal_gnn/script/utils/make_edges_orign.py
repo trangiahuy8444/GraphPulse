@@ -1,11 +1,13 @@
 import numpy as np
 import scipy.sparse as sp
+from tqdm import tqdm
 
 
 def mask_edges_prd(adjs_list):
     pos_edges_l, false_edges_l = [], []
     edges_list = []
-    for i in range(0, len(adjs_list)):
+    # Progress bar for processing snapshots
+    for i in tqdm(range(0, len(adjs_list)), desc="mask_edges_prd", unit="snapshot"):
         # Function to build test set with 10% positive links
         # NOTE: Splits are randomized and results might slightly deviate from reported numbers in the paper.
 
@@ -24,28 +26,54 @@ def mask_edges_prd(adjs_list):
 
         pos_edges_l.append(edges)
 
-        def ismember(a, b, tol=5):
-            rows_close = np.all(np.round(a - b[:, None], tol) == 0, axis=-1)
-            return np.any(rows_close)
-
+        # Optimized ismember using set for faster lookups
+        def ismember_set(edge_tuple, edge_set):
+            """Check if edge is in set (much faster than array comparison)"""
+            return edge_tuple in edge_set
+        
+        # Convert edges_all to set for O(1) lookup
+        edges_all_set = set(map(tuple, edges_all))
+        edges_false_set = set()
+        
         edges_false = []
-        while len(edges_false) < num_false:
+        max_attempts = num_false * 100  # Safety limit to prevent infinite loops
+        attempts = 0
+        
+        # Progress bar for negative sampling (only show if it's taking a while)
+        pbar = None
+        if num_false > 100:  # Only show progress bar for larger samples
+            pbar = tqdm(total=num_false, desc=f"  Negative sampling (snapshot {i+1}/{len(adjs_list)})", 
+                       unit="edge", leave=False)
+        
+        while len(edges_false) < num_false and attempts < max_attempts:
+            attempts += 1
             idx_i = np.random.randint(0, adj.shape[0])
             idx_j = np.random.randint(0, adj.shape[0])
             if idx_i == idx_j:
                 continue
-            if ismember([idx_i, idx_j], edges_all):
+            
+            edge_tuple = (idx_i, idx_j)
+            # Fast set-based lookup instead of slow array comparison
+            if edge_tuple in edges_all_set or edge_tuple in edges_false_set:
                 continue
-            if edges_false:
-                if ismember([idx_j, idx_i], np.array(edges_false)):
-                    continue
-                if ismember([idx_i, idx_j], np.array(edges_false)):
-                    continue
+            
             edges_false.append([idx_i, idx_j])
+            edges_false_set.add(edge_tuple)
+            if pbar:
+                pbar.update(1)
+        
+        if pbar:
+            pbar.close()
+        
+        if len(edges_false) < num_false:
+            print(f"WARNING: Only sampled {len(edges_false)}/{num_false} negative edges after {max_attempts} attempts. Graph may be too dense.")
 
-        assert ~ismember(edges_false, edges_all)
+        # Verify no false edges are in positive edges (using set for speed)
+        edges_false_array = np.asarray(edges_false)
+        for edge in edges_false_array:
+            assert tuple(edge) not in edges_all_set, f"False edge {edge} found in positive edges!"
 
-        false_edges_l.append(np.asarray(edges_false))
+        false_edges_l.append(edges_false_array)
 
     # NOTE: these edge lists only contain single direction of edge!
     return pos_edges_l, false_edges_l
@@ -174,27 +202,44 @@ def mask_edges_prd_new_by_marlin(adjs_list):
         rows_close = np.all(np.round(a - b[:, None], tol) == 0, axis=-1)
         return np.any(rows_close)
 
-    # 1.3 negative sampling
+    # 1.3 negative sampling (optimized with set-based lookup)
+    edges_all_set = set(map(tuple, edges_all))
+    edges_false_set = set()
     edges_false = []
-    while len(edges_false) < num_false:
+    max_attempts = num_false * 100
+    attempts = 0
+    
+    pbar = None
+    if num_false > 100:
+        pbar = tqdm(total=num_false, desc="  Negative sampling (first snapshot)", unit="edge", leave=False)
+    
+    while len(edges_false) < num_false and attempts < max_attempts:
+        attempts += 1
         idx_i = np.random.randint(0, adj.shape[0])
         idx_j = np.random.randint(0, adj.shape[0])
         if idx_i == idx_j:
             continue
-        if ismember([idx_i, idx_j], edges_all):
+        edge_tuple = (idx_i, idx_j)
+        if edge_tuple in edges_all_set or edge_tuple in edges_false_set:
             continue
-        if edges_false:
-            if ismember([idx_j, idx_i], np.array(edges_false)):
-                continue
-            if ismember([idx_i, idx_j], np.array(edges_false)):
-                continue
         edges_false.append([idx_i, idx_j])
-
-    assert ~ismember(edges_false, edges_all)
+        edges_false_set.add(edge_tuple)
+        if pbar:
+            pbar.update(1)
+    
+    if pbar:
+        pbar.close()
+    
+    if len(edges_false) < num_false:
+        print(f"WARNING: Only sampled {len(edges_false)}/{num_false} negative edges after {max_attempts} attempts.")
+    
+    # Verify
+    for edge in edges_false:
+        assert tuple(edge) not in edges_all_set
     false_edges_l.append(np.asarray(edges_false))
 
-    # 2. the next snapshots
-    for i in range(1, len(adjs_list)):
+    # 2. the next snapshots (with progress bar)
+    for i in tqdm(range(1, len(adjs_list)), desc="mask_edges_prd_new_by_marlin", unit="snapshot"):
         # 2.1 get new edge_index
         edges = sparse_to_tuple(adjs_list[i])[0]  # current edges
         last_edges = sparse_to_tuple(adjs_list[i - 1])[0]  # last edges
@@ -211,24 +256,42 @@ def mask_edges_prd_new_by_marlin(adjs_list):
         assert np.diag(adj.todense()).sum() == 0
         edges_all = sparse_to_tuple(adj)[0]
 
-        # 2.3 sample equal size of neg edges
+        # 2.3 sample equal size of neg edges (optimized with set-based lookup)
+        edges_all_set = set(map(tuple, edges_all))
+        edges_false_set = set()
         edges_false = []
-        while len(edges_false) < num_false:
+        max_attempts = num_false * 100
+        attempts = 0
+        
+        pbar = None
+        if num_false > 100:
+            pbar = tqdm(total=num_false, desc=f"  Negative sampling (snapshot {i+1}/{len(adjs_list)})", 
+                       unit="edge", leave=False)
+        
+        while len(edges_false) < num_false and attempts < max_attempts:
+            attempts += 1
             idx_i = np.random.randint(0, adj.shape[0])
             idx_j = np.random.randint(0, adj.shape[0])
             if idx_i == idx_j:  # filter self-loop
                 continue
-            if ismember([idx_i, idx_j], edges_all):  # filter old edges
+            edge_tuple = (idx_i, idx_j)
+            if edge_tuple in edges_all_set or edge_tuple in edges_false_set:
                 continue
-            if edges_false:
-                if ismember([idx_j, idx_i], np.array(edges_false)):
-                    continue
-                if ismember([idx_i, idx_j], np.array(edges_false)):
-                    continue
             edges_false.append([idx_i, idx_j])
-
-        assert ~ismember(edges_false, edges_all)
-
+            edges_false_set.add(edge_tuple)
+            if pbar:
+                pbar.update(1)
+        
+        if pbar:
+            pbar.close()
+        
+        if len(edges_false) < num_false:
+            print(f"WARNING: Only sampled {len(edges_false)}/{num_false} negative edges after {max_attempts} attempts.")
+        
+        # Verify
+        for edge in edges_false:
+            assert tuple(edge) not in edges_all_set
+        
         false_edges_l.append(np.asarray(edges_false))
         pos_edges_l.append(edges_pos)
 
@@ -258,7 +321,8 @@ def mask_edges_det(adjs_list):
     '''
     edges_list = []
     biedges_list = []
-    for i in range(0, len(adjs_list)):
+    # Progress bar for deterministic edge masking
+    for i in tqdm(range(0, len(adjs_list)), desc="mask_edges_det", unit="snapshot"):
         adj = adjs_list[i]
         # Remove diagonal elements
         adj = adj - sp.dia_matrix((adj.diagonal()[np.newaxis, :], [0]), shape=adj.shape)

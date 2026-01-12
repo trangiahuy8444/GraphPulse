@@ -21,6 +21,10 @@ def mkdirs(folder):
 
 def write_to_text(args, results, seed):
     if args.to_compute_results:
+        # Ensure the directory exists before writing result file
+        result_dir = os.path.dirname(args.result_txt)
+        if result_dir:  # Only create if path contains a directory
+            os.makedirs(result_dir, exist_ok=True)
         with open(args.result_txt, "a") as f:
             data = str(seed) + '\t' + '\t'.join(['{:.6f}'.format(result) for result in results[1:]]) + '\n'
             f.write(data)

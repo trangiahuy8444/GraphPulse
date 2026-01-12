@@ -10,7 +10,8 @@ def load_model(args):
         model = DGCN(args)
     elif args.model == 'HTGN':
         model = HTGN(args)
-    elif args.model == 'EGCN':
+    elif args.model in ['EGCN', 'EvolveGCN']:
+        # Support both 'EGCN' and 'EvolveGCN' model names
         model = EvolveGCN(args)
     elif args.model == 'GAE':
         model = GCNNet()

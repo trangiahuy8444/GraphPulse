@@ -18,8 +18,10 @@ class PoincareBall(Manifold):
     def __init__(self, ):
         super(PoincareBall, self).__init__()
         self.name = 'PoincareBall'
-        self.min_norm = 1e-15
-        self.eps = {torch.float32: 4e-3, torch.float64: 1e-5}
+        # Use float32-compatible epsilon (1e-7 instead of 1e-15)
+        self.min_norm = 1e-7
+        # MPS only supports float32, so remove float64 from eps dictionary
+        self.eps = {torch.float32: 4e-3}
 
     def sqdist(self, p1, p2, c):
         sqrt_c = c ** 0.5
@@ -48,8 +50,11 @@ class PoincareBall(Manifold):
 
     def proj(self, x, c):
         norm = torch.clamp_min(x.norm(dim=-1, keepdim=True, p=2), self.min_norm)
-        maxnorm = (1 - self.eps[x.dtype]) / (c ** 0.5)
-        cond = norm > maxnorm
+        # Use float32 epsilon (MPS compatibility)
+        eps_value = self.eps.get(x.dtype, 4e-3)  # Default to float32 epsilon if dtype not found
+        maxnorm = (1 - eps_value) / (c ** 0.5)
+        # Ensure condition is explicitly bool type for MPS compatibility
+        cond = (norm > maxnorm).bool()
         projected = x / norm * maxnorm
         return torch.where(cond, projected, x)
 
@@ -103,7 +108,8 @@ class PoincareBall(Manifold):
         mx = x @ m.transpose(-1, -2)
         mx_norm = mx.norm(dim=-1, keepdim=True, p=2).clamp_min(self.min_norm)
         res_c = tanh(mx_norm / x_norm * artanh(sqrt_c * x_norm)) * mx / (mx_norm * sqrt_c)
-        cond = (mx == 0).prod(-1, keepdim=True, dtype=torch.uint8)
+        # MPS requires bool type for torch.where conditions, not uint8
+        cond = (mx == 0).prod(-1, keepdim=True, dtype=torch.bool)
         res_0 = torch.zeros(1, dtype=res_c.dtype, device=res_c.device)
         res = torch.where(cond, res_0, res_c)
         return res

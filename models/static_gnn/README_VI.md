@@ -114,27 +114,37 @@ for batch in loader:
 ```python
 from models.static_gnn.static_graph_methods import GIN_classifier, read_torch_time_series_data
 
-# Đọc temporal graph data
-network = "networkadex.txt"
+# Đọc temporal graph data từ processed TDA snapshots
+network = "networkdgd.txt"
 data = read_torch_time_series_data(network, "Overlap_xx_Ncube_x")
 
-# Train và evaluate
+# Huấn luyện và đánh giá mô hình
 GIN_classifier(data, network)
 ```
 
 ### Chạy Full Pipeline (như trong main)
 
-```python
-# Chạy file trực tiếp:
+```bash
+# Chạy file trực tiếp để thực hiện full pipeline
+cd models/static_gnn
 python static_graph_methods.py
 ```
 
-Script sẽ tự động:
-- Xử lý tất cả networks trong networkList
-- Chạy 5 runs cho mỗi network
-- Đọc temporal graph snapshots từ TDA_Tuned folder
-- Train và evaluate GIN model
-- Lưu results
+**Lưu ý Mac M2**: Static GNN models sử dụng PyTorch và PyTorch Geometric. Đảm bảo đã cài đặt PyTorch với MPS support:
+```bash
+# Cài đặt PyTorch với MPS (nếu chưa có)
+pip install "torch>=2.0.0" torchvision torchaudio
+
+# Models sẽ tự động sử dụng MPS nếu available
+python static_graph_methods.py
+```
+
+Script sẽ tự động thực hiện:
+- Xử lý tất cả networks trong `networkList`
+- Chạy 5 runs (repetitions) cho mỗi network
+- Đọc temporal graph snapshots từ `TDA_Tuned/` folder
+- Huấn luyện và đánh giá GIN model trên từng snapshot
+- Lưu results vào `GnnResults/GIN_TimeSeries_Result.txt`
 
 ## Model Architecture
 
@@ -222,17 +232,23 @@ Network,Duplicate,Epoch,Train Accuracy,Train AUC Score,Test Accuracy,Test AUC Sc
 
 ### Dependencies
 
-- **PyTorch**: Deep learning framework
+- **PyTorch**: Deep learning framework (2.0+ cho Mac M2 với MPS, hoặc 1.6.0+ cho CUDA)
 - **PyTorch Geometric**: Graph neural network library
-- **PyYAML**: Đọc config files
-- **scikit-learn**: Metrics (ROC-AUC)
-- **pytorch-lightning**: Optional, cho advanced training (không được sử dụng trong code hiện tại)
+- **PyYAML**: Đọc và parse config files (YAML format)
+- **scikit-learn**: Metrics evaluation (ROC-AUC calculation)
+- **pytorch-lightning**: Optional, cho advanced training features (không được sử dụng trong implementation hiện tại)
+
+**Mac M2 Specific:**
+- PyTorch 2.0+ với MPS support được khuyến nghị
+- PyTorch Geometric extensions có thể cần build từ source
+- Models sẽ tự động sử dụng MPS nếu available
 
 ### Hardware Requirements
 
-- **GPU**: Không bắt buộc nhưng khuyến nghị cho training nhanh hơn
-- **CPU**: Có thể chạy trên CPU nhưng sẽ chậm
-- **Memory**: Cần đủ RAM để load graph snapshots
+- **GPU**: Không bắt buộc nhưng khuyến nghị cho training nhanh hơn (CUDA hoặc MPS)
+- **CPU**: Có thể chạy trên CPU nhưng sẽ chậm hơn đáng kể
+- **Memory**: Cần đủ RAM để load graph snapshots vào memory (có thể vài GB cho large networks)
+- **Mac M2**: MPS sẽ tự động được sử dụng nếu PyTorch 2.0+ được cài đặt
 
 ### Configuration
 

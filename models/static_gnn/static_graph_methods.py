@@ -180,6 +180,8 @@ def GIN_classifier(data, network):
                     f"Network\t{network} Duplicate\t{duplication}\tEpoch\t {epoch}\t Train Accuracy\t {train_acc:.4f}\t Train AUC Score\t {train_auc:.4f}\t Test Accuracy: {test_acc:.4f}\t test AUC Score\t {test_auc:.4f}\t unseen AUC Score\t {unseen_auc:.4f}")
 
             if epoch % 100 == 0:
+                # Ensure GnnResults directory exists
+                os.makedirs('GnnResults', exist_ok=True)
                 with open('GnnResults/GIN_TimeSeries_Result.txt', 'a+') as file:
                     file.write(
                         f"\nNetwork\t{network}\tDuplicate\t{duplication}\tEpoch\t{epoch}\tTrain Accuracy\t{train_acc:.4f}\tTrain AUC Score\t{train_auc:.4f}\tTest Accuracy:{test_acc:.4f}\tTest AUC Score\t{test_auc:.4f}\tunseen AUC Score\t{unseen_auc:.4f}\tNumber of Zero labels\t{count_zero_labels}\tNumber of one labels\t{count_one_labels}")
@@ -256,13 +258,11 @@ def test(test_loader, model):
 
 
 if __name__ == "__main__":
-    networkList = ["networkaeternity.txt", "networkaion.txt", "networkaragon.txt", "networkbancor.txt",
-                   "networkcentra.txt", "networkcindicator.txt", "networkcoindash.txt", "networkdgd.txt",
-                   "networkiconomi.txt"]
+    networkList = ["networkdgd.txt"]
     for network in networkList:
         print("Working on {}\n".format(network))
         # ** should select the right data folder based on the data **
-        data = read_torch_time_series_data(network, "Overlap_xx_Ncube_x")
+        data = read_torch_time_series_data(network, "Overlap_0.3_Ncube_2")
         for i in range(1, 6):
             print(f"RUN {i}")
             GIN_classifier(data, network)

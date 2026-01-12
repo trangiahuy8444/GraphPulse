@@ -84,7 +84,10 @@ class NetworkParser:
             # check if the network has more than 20 days of data
             if ((last_date_of_data - start_date).days < self.networkValidationDuration):
                 print(file + "Is not a valid network")
-                shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+                # Ensure Invalid directory exists
+                invalid_dir = self.file_path + "Invalid/"
+                os.makedirs(invalid_dir, exist_ok=True)
+                shutil.move(self.file_path + file, invalid_dir + file)
                 continue
 
             # select only the rows that fall within the first 7 days
@@ -96,6 +99,8 @@ class NetworkParser:
             for item in selectedNetworkInTimeFrame.to_dict(orient="records"):
                 transactionGraph.add_edge(item["from"], item["to"], value=item["value"])
 
+            # Ensure output directory exists
+            os.makedirs('NetworkxGraphs', exist_ok=True)
             with open('NetworkxGraphs/' + file, 'wb') as f:
                 pickle.dump(transactionGraph, f)
 
@@ -143,10 +148,14 @@ class NetworkParser:
                      "label_factor_percentage": (last_date_sum / peak_count),
                      "label": label}
 
+            # Pandas 2.0+ compatibility: replace deprecated append() with pd.concat()
             stat_data = self.stat_data.iloc[0:0]
-            stat_data = stat_data.append(stats, ignore_index=True)
+            stat_data = pd.concat([stat_data, pd.DataFrame([stats])], ignore_index=True)
             stat_data.to_csv('final_data.csv', mode='a', header=False)
-            shutil.move(self.file_path + file, self.file_path + "Processed/" + file)
+            # Ensure Processed directory exists
+            processed_dir = self.file_path + "Processed/"
+            os.makedirs(processed_dir, exist_ok=True)
+            shutil.move(self.file_path + file, processed_dir + file)
             self.processingIndx += 1
             # nx.draw(transactionGraph, node_size=10)
             # plt.savefig("images/" + file + "_" + str(timeFrame) + "_" + ".png")
@@ -184,7 +193,10 @@ class NetworkParser:
         # check if the network has more than 20 days of data
         if ((data_last_date - window_start_date).days < maxDuration):
             print(file + "Is not a valid network")
-            shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+            # Ensure Invalid directory exists
+            invalid_dir = self.file_path + "Invalid/"
+            os.makedirs(invalid_dir, exist_ok=True)
+            shutil.move(self.file_path + file, invalid_dir + file)
             return
 
         # normalize the edge weights for the graph network {0-9}
@@ -300,8 +312,11 @@ class NetworkParser:
             # Generating PyGraphs for timeseries data
             if not os.path.exists(directory):
                 os.makedirs(directory)
+            # Ensure subdirectory exists
+            subdirectory = directory + "/TemporalVectorizedGraph_Tuned/"
+            os.makedirs(subdirectory, exist_ok=True)
             pygData = from_networkx(transactionGraph, label=label, group_node_attrs=featureNames)
-            with open(directory + "/TemporalVectorizedGraph_Tuned/" + file + "_" + "graph_" + str(indx), 'wb') as f:
+            with open(subdirectory + file + "_" + "graph_" + str(indx), 'wb') as f:
                 pickle.dump(pygData, f)
 
     def create_time_series_other_graphs(self, file):
@@ -336,7 +351,10 @@ class NetworkParser:
         # check if the network has more than 20 days of data
         if ((data_last_date - window_start_date).days < maxDuration):
             print(file + "Is not a valid network")
-            shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+            # Ensure Invalid directory exists
+            invalid_dir = self.file_path + "Invalid/"
+            os.makedirs(invalid_dir, exist_ok=True)
+            shutil.move(self.file_path + file, invalid_dir + file)
             return
 
         # normalize the edge weights for the graph network {0-9}
@@ -459,8 +477,11 @@ class NetworkParser:
             print("Generating raw graph \n")
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            pygData = self.from_networkx(transactionGraph, label=label, group_node_attrs=featureNames)
-            with open(directory + "/RawGraph/" + file + "_" + "graph_" + str(indx), 'wb') as f:
+            # Ensure subdirectory exists
+            subdirectory = directory + "/RawGraph/"
+            os.makedirs(subdirectory, exist_ok=True)
+            pygData = from_networkx(transactionGraph, label=label, group_node_attrs=featureNames)
+            with open(subdirectory + file + "_" + "graph_" + str(indx), 'wb') as f:
                 pickle.dump(pygData, f)
 
     def create_time_series_reddit_graphs(self, file):
@@ -492,7 +513,10 @@ class NetworkParser:
         # check if the network has more than 20 days of data
         if ((data_last_date - window_start_date).days < maxDuration):
             print(file + "Is not a valid network")
-            shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+            # Ensure Invalid directory exists
+            invalid_dir = self.file_path + "Invalid/"
+            os.makedirs(invalid_dir, exist_ok=True)
+            shutil.move(self.file_path + file, invalid_dir + file)
             return
 
         # normalize the edge weights for the graph network {0-9}
@@ -621,8 +645,11 @@ class NetworkParser:
             print("Generating raw graph \n")
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            pygData = self.from_networkx(transactionGraph, label=label, group_node_attrs=featureNames)
-            with open(directory + "/RawGraph/" + file + "_" + "graph_" + str(indx), 'wb') as f:
+            # Ensure subdirectory exists
+            subdirectory = directory + "/RawGraph/"
+            os.makedirs(subdirectory, exist_ok=True)
+            pygData = from_networkx(transactionGraph, label=label, group_node_attrs=featureNames)
+            with open(subdirectory + file + "_" + "graph_" + str(indx), 'wb') as f:
                 pickle.dump(pygData, f)
 
     def create_time_series_rnn_sequence(self, file):
@@ -650,7 +677,10 @@ class NetworkParser:
         # check if the network has more than 20 days of data
         if ((data_last_date - window_start_date).days < maxDuration):
             print(file + "Is not a valid network")
-            shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+            # Ensure Invalid directory exists
+            invalid_dir = self.file_path + "Invalid/"
+            os.makedirs(invalid_dir, exist_ok=True)
+            shutil.move(self.file_path + file, invalid_dir + file)
             return
 
         # normalize the edge weights for the graph network {0-9}
@@ -816,7 +846,10 @@ class NetworkParser:
         # check if the network has more than 20 days of data
         if ((data_last_date - window_start_date).days < maxDuration):
             print(file + "Is not a valid network")
-            shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+            # Ensure Invalid directory exists
+            invalid_dir = self.file_path + "Invalid/"
+            os.makedirs(invalid_dir, exist_ok=True)
+            shutil.move(self.file_path + file, invalid_dir + file)
             return
 
         # normalize the edge weights for the graph network {0-9}
@@ -980,7 +1013,10 @@ class NetworkParser:
         # check if the network has more than 20 days of data
         if ((data_last_date - window_start_date).days < maxDuration):
             print(file + "Is not a valid network")
-            shutil.move(self.file_path + file, self.file_path + "Invalid/" + file)
+            # Ensure Invalid directory exists
+            invalid_dir = self.file_path + "Invalid/"
+            os.makedirs(invalid_dir, exist_ok=True)
+            shutil.move(self.file_path + file, invalid_dir + file)
             return
 
         # normalize the edge weights for the graph network {0-9}
@@ -1130,7 +1166,7 @@ class NetworkParser:
                     graph = mapper.map(
                         lens,
                         Xfilt,
-                        clusterer=sklearn.cluster.KMeans(n_clusters=cls, random_state=1618033),
+                        clusterer=sklearn.cluster.KMeans(n_clusters=cls, n_init=10, random_state=1618033),
                         cover=km.Cover(n_cubes=n_cube, perc_overlap=overlap))  # 0.2 0.4
 
                     # mapper.visualize(graph,
@@ -1155,7 +1191,7 @@ class NetworkParser:
                     featureNames = ["cluster_size"]
                     if not os.path.exists(directory):
                         os.makedirs(directory)
-                    pygData = self.from_networkx(tdaGraph, label=label, group_node_attrs=featureNames)
+                    pygData = from_networkx(tdaGraph, label=label, group_node_attrs=featureNames)
                     with open(directory + "/" + network + "_" + "TDA_graph(cube-{},overlap-{})_".format(n_cube,
                                                                                                         overlap) + str(
                         timeWindow), 'wb') as f:
@@ -1216,7 +1252,7 @@ class NetworkParser:
                 dailyTdaGraph = mapper.map(
                     lens,
                     Xfilt,
-                    clusterer=sklearn.cluster.KMeans(n_clusters=cls, random_state=1618033),
+                    clusterer=sklearn.cluster.KMeans(n_clusters=cls, n_init=10, random_state=1618033),
                     cover=km.Cover(n_cubes=n_cubes, perc_overlap=per_overlap))  # 0.2 0.4
 
                 # extract the cluster size and cluster ID vector out of that
@@ -1418,7 +1454,7 @@ class NetworkParser:
         dailyTdaGraph = mapper.map(
             lens,
             Xfilt,
-            clusterer=sklearn.cluster.KMeans(n_clusters=cls, random_state=1618033),
+            clusterer=sklearn.cluster.KMeans(n_clusters=cls, n_init=10, random_state=1618033),
             cover=km.Cover(n_cubes=n_cubes, perc_overlap=per_overlap))  # 0.2 0.4
 
         # Visualizing the mapper
@@ -1501,13 +1537,19 @@ class NetworkParser:
                     # The process is still running, terminate it
                     p.terminate()
                     print("The file is taking infinite time - check the file ")
-                    shutil.move(self.file_path + file, self.file_path + "issue/" + file)
+                    # Ensure issue directory exists
+                    issue_dir = self.file_path + "issue/"
+                    os.makedirs(issue_dir, exist_ok=True)
+                    shutil.move(self.file_path + file, issue_dir + file)
                     self.processingIndx += 1
                     print("Function timed out and was terminated")
                 else:
                     # The process has finished
                     self.processingIndx += 1
-                    shutil.move(self.file_path + file, self.file_path + "Processed/" + file)
+                    # Ensure Processed directory exists
+                    processed_dir = self.file_path + "Processed/"
+                    os.makedirs(processed_dir, exist_ok=True)
+                    shutil.move(self.file_path + file, processed_dir + file)
                     print("Process finished successfully")
                     p.terminate()
 
@@ -1528,13 +1570,19 @@ class NetworkParser:
                     # The process is still running, terminate it
                     p.terminate()
                     print("The file is taking infinite time - check the file ")
-                    shutil.move(self.timeseries_file_path + file, self.timeseries_file_path + "issue/" + file)
+                    # Ensure issue directory exists
+                    issue_dir = self.timeseries_file_path + "issue/"
+                    os.makedirs(issue_dir, exist_ok=True)
+                    shutil.move(self.timeseries_file_path + file, issue_dir + file)
                     self.processingIndx += 1
                     print("Function timed out and was terminated")
                 else:
                     # The process has finished
                     self.processingIndx += 1
-                    shutil.move(self.timeseries_file_path + file, self.timeseries_file_path + "Processed/" + file)
+                    # Ensure Processed directory exists
+                    processed_dir = self.timeseries_file_path + "Processed/"
+                    os.makedirs(processed_dir, exist_ok=True)
+                    shutil.move(self.timeseries_file_path + file, processed_dir + file)
                     print("Process finished successfully")
                     p.terminate()
 

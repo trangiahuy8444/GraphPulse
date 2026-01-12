@@ -23,10 +23,24 @@ class EvolveGCN(BaseModel):
         assert self.egcn_type in ['EGCNO', 'EGCNH']
 
     def forward(self, A_list, Nodes_list=None):
+        # Handle case where A_list is a single edge_index tensor (from main.py)
+        # vs a list of edge_index tensors (from baseline scripts)
+        if isinstance(A_list, torch.Tensor):
+            # Single edge_index passed - wrap it in a list for compatibility
+            A_list = [A_list]
+        
         if Nodes_list is None:
             Nodes_list = [self.feat] * len(A_list)
+        elif isinstance(Nodes_list, torch.Tensor):
+            # Single node embedding tensor passed - wrap it in a list
+            Nodes_list = [Nodes_list] * len(A_list)
+        
         Nodes_list = self.GRCU_layers1(A_list, Nodes_list, activation=True)
         Nodes_list = self.GRCU_layers2(A_list, Nodes_list, activation=False)
+        
+        # If input was a single tensor, return the last (and only) output
+        if len(Nodes_list) == 1:
+            return Nodes_list[0]
         return Nodes_list
 
 
@@ -49,6 +63,45 @@ class GRCU(torch.nn.Module):
         out_seq = []
         for t, edge_index in enumerate(A_list):
             node_embs = node_embs_list[t]
+            
+            # Ensure edge_index is in the correct format [2, E] for GCNConv
+            # Handle different tensor types: sparse, dense, or non-tensor
+            if not isinstance(edge_index, torch.Tensor):
+                # If it's not a tensor, try to convert it
+                edge_index = torch.tensor(edge_index, dtype=torch.long, device=node_embs.device)
+            
+            # Check if tensor is sparse layout (sparse_coo, sparse_csr, etc.)
+            # Only call .indices() if it's actually a sparse tensor
+            if edge_index.layout == torch.sparse_coo:
+                # If sparse COO tensor, extract the indices [2, E]
+                edge_index = edge_index.indices()
+            elif edge_index.layout == torch.sparse_csr or edge_index.layout == torch.sparse_csc:
+                # If sparse CSR/CSC, convert to COO first then extract indices
+                edge_index = edge_index.to_sparse_coo().indices()
+            # Else: assume it's already a dense (Strided) tensor
+            
+            # Ensure edge_index is 2D with shape [2, E]
+            if edge_index.dim() == 1:
+                # If 1D, this is unexpected - provide debug info
+                raise ValueError(
+                    f"edge_index must be 2D [2, E], got 1D tensor with shape {edge_index.shape}. "
+                    f"Original tensor layout: {edge_index.layout if hasattr(edge_index, 'layout') else 'unknown'}"
+                )
+            elif edge_index.dim() != 2:
+                raise ValueError(
+                    f"edge_index must be 2D [2, E], got {edge_index.dim()}D tensor with shape {edge_index.shape}"
+                )
+            
+            if edge_index.size(0) != 2:
+                # Transpose if needed (E, 2) -> (2, E)
+                if edge_index.size(1) == 2:
+                    edge_index = edge_index.t()
+                else:
+                    raise ValueError(
+                        f"edge_index must have shape [2, E], got {edge_index.shape}. "
+                        f"Please ensure input is edge list format with 2 rows (source, destination)"
+                    )
+            
             # first evolve the weights from the initial and use the new weights with the node_embs
             if self.egcn_type == 'EGCNO':
                 GCN_weights = self.evolve_weights(GCN_weights)

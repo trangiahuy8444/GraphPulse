@@ -101,7 +101,8 @@ def process_motifs(file):
 
         # Create a DataFrame to store statistics
         stat_data = pd.DataFrame(columns=['network', 'motifs'])
-        stat_data = stat_data.append(stats, ignore_index=True)
+        # Pandas 2.0+ compatibility: replace deprecated append() with pd.concat()
+        stat_data = pd.concat([stat_data, pd.DataFrame([stats])], ignore_index=True)
 
         # Save statistics to a CSV file
         stat_data.to_csv('final_data_motifs.csv', mode='a', header=False)
@@ -308,7 +309,8 @@ def process_data_duration(self, file):
     stats = {'network': file, "data_duration": days}
 
     stat_date = self.stat_date.iloc[0:0]
-    stat_date = stat_date.append(stats, ignore_index=True)
+    # Pandas 2.0+ compatibility: replace deprecated append() with pd.concat()
+    stat_date = pd.concat([stat_date, pd.DataFrame([stats])], ignore_index=True)
     stat_date.to_csv('final_data_date.csv', mode='a', header=False)
     shutil.move(self.file_path + file, self.file_path + "Pr/" + file)
 

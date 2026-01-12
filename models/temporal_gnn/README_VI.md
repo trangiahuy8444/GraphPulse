@@ -133,11 +133,14 @@ Loss functions:
 ```bash
 cd models/temporal_gnn/script
 
-# Chạy HTGN với example script
+# Ví dụ 1: Chạy HTGN với example script
 bash example/run_htgn.sh
 
-# Hoặc chạy trực tiếp
+# Ví dụ 2: Chạy trực tiếp với dataset aion
 python main.py --dataset aion --model HTGN --seed 1024
+
+# Ví dụ 3: Huấn luyện trên dataset dgd (Mac M2 tự động sử dụng MPS)
+python main.py --dataset dgd --model HTGN --seed 1024
 ```
 
 ### Configuration
@@ -145,28 +148,67 @@ python main.py --dataset aion --model HTGN --seed 1024
 **Các arguments chính:**
 ```bash
 python main.py \
-    --dataset aion \              # Dataset name
-    --model HTGN \                # Model (HTGN, EvolveGCN, GAE, VGAE)
-    --device_id -1 \              # -1 for CPU, 0+ for GPU
-    --seed 1024 \                 # Random seed
+    --dataset aion \              # Tên dataset (aion, dgd, adex, etc.)
+    --model HTGN \                # Mô hình (HTGN, EvolveGCN, GAE, VGAE)
+    --device_id -1 \              # -1 cho CPU, 0+ cho GPU, để trống để auto-detect
+    --seed 1024 \                 # Random seed cho reproducibility
     --lr 0.01 \                   # Learning rate
     --nhid 16 \                   # Hidden dimension
-    --nb_window 5 \               # Temporal window size
-    --max_epoch 500 \             # Max epochs
+    --nb_window 5 \               # Kích thước temporal window
+    --max_epoch 500 \             # Số epochs tối đa
     --patience 50                 # Early stopping patience
 ```
 
+**Lưu ý về device_id trên Mac M2**:
+- **Không chỉ định `--device_id`**: Tự động detect và sử dụng MPS nếu available (khuyến nghị)
+- **`--device_id -1`**: Force sử dụng CPU (cho exact reproducibility hoặc debugging)
+- **`--device_id 0`**: Sẽ fallback về MPS nếu CUDA không available (Mac M2 behavior)
+
 ### Mac M2 Users
 
-**Quan trọng**: Code đã được patch để hỗ trợ Mac M2:
-- Tự động detect và sử dụng MPS nếu available
+**Quan trọng**: Code đã được patch để hỗ trợ Mac M2 với MPS (Metal Performance Shaders):
+- Tự động detect và sử dụng MPS nếu available (PyTorch 2.0+ required)
 - Fallback về CPU nếu MPS không available
-- GPU memory tracking sẽ hiển thị 0 (MPS limitation)
+- GPU memory tracking sẽ hiển thị 0 MiB (MPS limitation, không phải bug)
 
-**Install dependencies:**
+**Cài đặt dependencies cho Mac M2:**
 ```bash
+# Bước 1: Cài đặt PyTorch với MPS support (yêu cầu PyTorch 2.0+)
+# Lưu ý: Sử dụng quotes cho zsh compatibility
 pip install "torch>=2.0.0" torchvision torchaudio
+
+# Bước 2: Xác minh MPS availability
+python -c "import torch; print(f'MPS available: {torch.backends.mps.is_available()}')"
+
+# Bước 3: Cài đặt dependencies tương thích Mac M2
 pip install -r requirements_mac_m2.txt
+```
+
+**Ví dụ huấn luyện trên Mac M2:**
+```bash
+cd models/temporal_gnn/script
+
+# Ví dụ 1: Huấn luyện HTGN trên dataset aion (tự động dùng MPS)
+python main.py --dataset aion --model HTGN --seed 1024
+
+# Ví dụ 2: Huấn luyện trên dataset dgd với cấu hình cụ thể
+python main.py --dataset dgd --model HTGN --nhid 16 --lr 0.01 --seed 1024
+
+# Ví dụ 3: Force sử dụng CPU cho exact reproducibility
+python main.py --dataset aion --model HTGN --device_id -1 --seed 1024
+
+# Ví dụ 4: Huấn luyện với EvolveGCN baseline
+python main.py --dataset aion --model EvolveGCN --egcn_type EGCNH
+```
+
+**Kiểm tra device đang sử dụng:**
+Khi chạy training, logs sẽ hiển thị:
+```
+INFO: using MPS (Apple Silicon GPU) to train the model
+```
+hoặc
+```
+INFO: using cpu to train the model
 ```
 
 ### Example Scripts
@@ -174,37 +216,57 @@ pip install -r requirements_mac_m2.txt
 **run_htgn.sh:**
 ```bash
 #!/bin/bash
+# Example script cho HTGN training
 python main.py --dataset aion --model HTGN --device_id -1 --seed 1024
 ```
 
 **run_evolvegcn.sh:**
 ```bash
+#!/bin/bash
+# Example script cho EvolveGCN baseline
 python main.py --dataset aion --model EvolveGCN --egcn_type EGCNH
 ```
 
+**Lưu ý**: Trên Mac M2, có thể bỏ `--device_id -1` để tự động sử dụng MPS.
+
 ### Dataset-Specific Configurations
 
-Config.py tự động set parameters cho từng dataset:
-- `aion`: testlength=38, trainable_feat=1
-- `dgd`: testlength=144, trainable_feat=1
-- `adex`: testlength=59, trainable_feat=1
-- Và nhiều datasets khác...
+File `config.py` tự động thiết lập các parameters phù hợp cho từng dataset:
+- **`aion`**: testlength=38 snapshots, trainable_feat=1 (trainable node features)
+- **`dgd`**: testlength=144 snapshots (20% của 720 total), trainable_feat=1
+- **`adex`**: testlength=59 snapshots (20% của 293 total), trainable_feat=1
+- **`aragon`**: testlength=67 snapshots, trainable_feat=1
+- Và nhiều datasets khác được cấu hình tương tự...
+
+**Lưu ý**: `trainable_feat=1` có nghĩa là sử dụng trainable node features thay vì one-hot encoding. Điều này thường cho kết quả tốt hơn cho large networks.
 
 ### Training Modes
 
-**1. Link Prediction (default):**
+**1. Link Prediction (default mode):**
 ```bash
-python main.py --dataset aion --model HTGN
+# Huấn luyện cho link prediction task
+python main.py --dataset dgd --model HTGN
+
+# Với Mac M2 (tự động dùng MPS):
+python main.py --dataset dgd --model HTGN --seed 1024
 ```
 
 **2. Temporal Graph Classification (TGC):**
 ```bash
+# Huấn luyện cho temporal graph classification
 python train_tgc_end_to_end.py --dataset aion --model HTGN
+
+# Mac M2 example:
+python train_tgc_end_to_end.py --dataset aion --model HTGN --seed 1024
 ```
 
 **3. Graph Classification:**
 ```bash
+# Huấn luyện cho graph-level classification
 python train_graph_classification.py --dataset aion --model HTGN
+
+# Mac M2 example:
+python train_graph_classification.py --dataset aion --model HTGN --seed 1024
 ```
 
 ## Model Details
@@ -280,27 +342,30 @@ Results được log vào:
 
 ### Dependencies
 
-**Core:**
-- PyTorch 2.0+ (hoặc 1.6.0+ cho CUDA)
-- PyTorch Geometric
-- geoopt (hyperbolic geometry)
-- NetworkX, NumPy, Pandas
+**Core Dependencies:**
+- **PyTorch**: 2.0+ (khuyến nghị cho Mac M2 với MPS) hoặc 1.6.0+ cho CUDA systems
+- **PyTorch Geometric**: Graph neural network library
+- **geoopt**: Hyperbolic geometry library (có thể cần build từ source)
+- **NetworkX**: Graph manipulation và analysis
+- **NumPy, Pandas**: Data processing
 
-**Mac M2:**
-- Xem `requirements_mac_m2.txt`
-- Cần PyTorch 2.0+ cho MPS support
+**Mac M2 Specific:**
+- Xem `requirements_mac_m2.txt` cho danh sách đầy đủ
+- **Bắt buộc**: PyTorch 2.0+ cho MPS support
+- PyTorch Geometric extensions có thể cần build từ source
 
 ### Hardware Requirements
 
-**Bắt buộc:**
-- **GPU**: Khuyến nghị mạnh (CUDA hoặc MPS)
-- **Memory**: Tối thiểu 8GB GPU memory (16GB+ recommended)
-- **CPU**: Nhiều cores cho data loading
+**Yêu cầu phần cứng:**
+- **GPU**: Khuyến nghị mạnh (CUDA hoặc MPS) cho training hiệu quả
+- **Memory**: Tối thiểu 8GB GPU memory (khuyến nghị 16GB+ cho large datasets như dgd)
+- **CPU**: Nhiều cores cho data loading và preprocessing
 
-**Mac M2:**
-- Đã được optimize cho MPS
-- Có thể chạy trên CPU nhưng rất chậm
-- Memory tracking không available (hiển thị 0 MiB)
+**Mac M2 (Apple Silicon):**
+- Đã được optimize cho MPS (Metal Performance Shaders)
+- MPS sẽ tự động được sử dụng nếu PyTorch 2.0+ được cài đặt
+- Có thể chạy trên CPU nhưng sẽ rất chậm (không khuyến nghị cho production)
+- Memory tracking không available trên MPS (sẽ hiển thị 0 MiB trong logs - đây là limitation của MPS, không phải bug)
 
 ### Configuration
 
@@ -316,20 +381,23 @@ Results được log vào:
 ### Performance
 
 **Training Time:**
-- Tùy dataset size và model complexity
-- HTGN: Có thể mất vài giờ cho large datasets
-- EvolveGCN: Nhanh hơn HTGN
+- Tùy thuộc vào kích thước dataset và độ phức tạp của model
+- **HTGN**: Có thể mất vài giờ cho large datasets (ví dụ: dgd với 720 snapshots)
+- **EvolveGCN**: Nhanh hơn HTGN do architecture đơn giản hơn
+- **Mac M2 với MPS**: Thời gian training tương đương hoặc nhanh hơn CPU, nhưng có thể chậm hơn CUDA một chút
 
 **Memory Usage:**
-- Phụ thuộc vào số nodes và timesteps
-- Có thể cần giảm batch size hoặc window size
+- Phụ thuộc vào số nodes, số timesteps, và kích thước temporal window
+- Large datasets như dgd có thể cần giảm `nb_window` hoặc `nhid` nếu gặp memory issues
+- Mac M2: Memory tracking không available, nhưng MPS có thể quản lý memory tốt hơn CPU mode
 
 ### Troubleshooting
 
 **MPS Issues (Mac M2):**
-- Ensure PyTorch 2.0+
-- Check: `torch.backends.mps.is_available()`
-- Fallback to CPU: `--device_id -1`
+- Đảm bảo đã cài đặt PyTorch 2.0+: `pip install "torch>=2.0.0"`
+- Kiểm tra MPS availability: `python -c "import torch; print(torch.backends.mps.is_available())"`
+- Nếu MPS không available, check macOS version (yêu cầu macOS 12.3+)
+- Fallback to CPU: Sử dụng `--device_id -1` nếu gặp vấn đề với MPS
 
 **CUDA Out of Memory:**
 - Giảm `nb_window`
@@ -349,9 +417,10 @@ Results được log vào:
 
 ### Reproducibility
 
-- Sử dụng `--seed` argument
-- Results có thể khác một chút giữa CUDA, MPS, và CPU
-- Để exact reproducibility, sử dụng CPU: `--device_id -1`
+- **Random Seeds**: Luôn sử dụng `--seed` argument để đảm bảo reproducibility
+- **Hardware Differences**: Kết quả có thể khác một chút giữa CUDA, MPS, và CPU (thường < 0.01-0.02 trong metrics)
+- **Exact Reproducibility**: Để đạt exact reproducibility, sử dụng CPU mode: `--device_id -1 --seed 1024`
+- **Mac M2**: Sử dụng cùng seed trên cùng hệ thống sẽ cho kết quả reproducible, nhưng có thể khác với CUDA systems
 
 ### Best Practices
 

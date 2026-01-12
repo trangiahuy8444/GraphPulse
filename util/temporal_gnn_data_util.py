@@ -67,7 +67,8 @@ def creatBaselineDatasets(self, file):
         else:
             existing_df = pd.DataFrame()
 
-        appended_df = existing_df.append(selectedNetworkInGraphDataWindow, ignore_index=True)
+        # Pandas 2.0+ compatibility: replace deprecated append() with pd.concat()
+        appended_df = pd.concat([existing_df, selectedNetworkInGraphDataWindow], ignore_index=True)
         appended_df.to_csv(csv_file_path, index=False)
 
         window_start_date = window_start_date + dt.timedelta(days=1)
@@ -142,7 +143,8 @@ def creatBaselineDatasetsOther(self, file):
         else:
             existing_df = pd.DataFrame()
 
-        appended_df = existing_df.append(selectedNetworkInGraphDataWindow, ignore_index=True)
+        # Pandas 2.0+ compatibility: replace deprecated append() with pd.concat()
+        appended_df = pd.concat([existing_df, selectedNetworkInGraphDataWindow], ignore_index=True)
         appended_df.to_csv(csv_file_path, index=False)
 
         window_start_date = window_start_date + dt.timedelta(days=1)
@@ -220,7 +222,8 @@ def creatBaselineDatasetsReddit(self, file):
         else:
             existing_df = pd.DataFrame()
 
-        appended_df = existing_df.append(selectedNetworkInGraphDataWindow, ignore_index=True)
+        # Pandas 2.0+ compatibility: replace deprecated append() with pd.concat()
+        appended_df = pd.concat([existing_df, selectedNetworkInGraphDataWindow], ignore_index=True)
         appended_df.to_csv(csv_file_path, index=False)
 
         window_start_date = window_start_date + dt.timedelta(days=1)

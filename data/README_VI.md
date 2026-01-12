@@ -2,13 +2,13 @@
 
 ## Giới thiệu
 
-Thư mục `data/` chứa tất cả dữ liệu mạng lưới (network data) và các sequences đã được xử lý sẵn cho dự án GraphPulse. Đây là nơi lưu trữ:
+Thư mục `data/` chứa tất cả dữ liệu mạng lưới (network data) và các sequences đã được tiền xử lý sẵn cho dự án GraphPulse. Đây là repository trung tâm lưu trữ:
 
 1. **Raw network data**: Các file mạng lưới thô từ các nguồn khác nhau (Ethereum ERC20 tokens, MathOverflow, Reddit)
-2. **Time series data**: Dữ liệu mạng lưới đã được tổ chức theo thời gian
-3. **Processed sequences**: Các sequences đã được extract từ TDA và raw features, sẵn sàng cho RNN training
+2. **Time series data**: Dữ liệu mạng lưới đã được tổ chức và sắp xếp theo timeline
+3. **Processed sequences**: Các sequences đã được trích xuất từ TDA features và raw features, sẵn sàng cho việc huấn luyện các mô hình RNN
 
-Thư mục này đóng vai trò trung tâm trong pipeline của GraphPulse, cung cấp dữ liệu đầu vào cho cả data processing (analyzer) và model training (models).
+Thư mục này đóng vai trò trung tâm trong data pipeline của GraphPulse, cung cấp dữ liệu đầu vào cho cả giai đoạn tiền xử lý (analyzer) và huấn luyện mô hình (models). Để hiểu rõ luồng xử lý dữ liệu từ raw files đến model input, xem `MODEL_FLOW_EXPLANATION.md` ở root directory.
 
 ## Cấu trúc
 

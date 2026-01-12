@@ -54,11 +54,16 @@ args = parser.parse_args()
 
 # set the running device
 # Mac M2 (Apple Silicon) compatibility: Support MPS with fallback to CPU
-if int(args.device_id) >= 0 and torch.cuda.is_available():
+# If user explicitly requests CPU, skip GPU/MPS detection
+if args.device.lower() == 'cpu':
+    args.device = torch.device("cpu")
+    print('INFO: using cpu to train the model (explicitly requested)')
+elif int(args.device_id) >= 0 and torch.cuda.is_available():
     args.device = torch.device(f"cuda:{args.device_id}")
     print('INFO: using gpu:{} to train the model'.format(args.device_id))
-elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available() and args.device.lower() != 'cpu':
     # MPS (Metal Performance Shaders) for Apple Silicon - requires PyTorch 1.12+
+    # Only use MPS if CPU was not explicitly requested
     args.device = torch.device("mps")
     print('INFO: using MPS (Apple Silicon GPU) to train the model')
 else:

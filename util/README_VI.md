@@ -2,12 +2,14 @@
 
 ## Giới thiệu
 
-Thư mục `util/` chứa các utility functions và helper modules được sử dụng xuyên suốt dự án GraphPulse. Các modules này cung cấp các chức năng hỗ trợ cho data processing, graph manipulation, visualization, và data preparation cho các mô hình khác nhau.
+Thư mục `util/` chứa các utility functions và helper modules được sử dụng xuyên suốt dự án GraphPulse. Các modules này cung cấp một tập hợp các chức năng hỗ trợ cho data processing, graph manipulation, visualization, và data preparation cho các mô hình machine learning khác nhau.
 
-Thư mục này đóng vai trò là thư viện các công cụ tiện ích, được import và sử dụng bởi:
-- `analyzer/`: Xử lý và phân tích dữ liệu
-- `models/`: Chuẩn bị dữ liệu cho training
-- Các scripts khác trong dự án
+Thư mục này đóng vai trò là thư viện các công cụ tiện ích (utility library), được import và tái sử dụng bởi:
+- `analyzer/`: Xử lý và phân tích dữ liệu mạng lưới
+- `models/`: Chuẩn bị dữ liệu cho training và preprocessing
+- Các scripts khác trong dự án cần các operations chung
+
+Các functions trong thư mục này được thiết kế để tái sử dụng và modular, giúp tránh code duplication và đảm bảo consistency trong toàn bộ codebase.
 
 ## Các file chính
 
